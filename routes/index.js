@@ -2,6 +2,8 @@
 var crypto = require('crypto');
 //User对象的操作
 var User = require('../models/user');
+//Post对象的操作
+var Post = require('../models/post')
 //增加页面权限
 function checkNotLogin(req,res,next) {
     if(req.session.user){
@@ -22,11 +24,17 @@ function checkLogin(req,res,next) {
 module.exports = function (app) {
     //首页的路由
     app.get('/',function (req,res) {
-        res.render('index',{
-            title:'首页',
-            user:req.session.user,//注册成功的用户信息
-            success:req.flash('success').toString(),//成功的提示信息
-            error:req.flash('error').toString()//失败的提示信息
+        Post.get(null,function (err,posts) {
+            if(err){
+                posts = [];
+            }
+            res.render('index',{
+                title:'首页',
+                posts:posts,
+                user:req.session.user,//注册成功的用户信息
+                success:req.flash('success').toString(),//成功的提示信息
+                error:req.flash('error').toString()//失败的提示信息
+            })
         })
     })
     //注册页面
@@ -131,7 +139,17 @@ module.exports = function (app) {
     })
     //发布行为
     app.post('/post',checkLogin,function (req,res) {
-
+        //获取当前登录的用户
+        var currentUser = req.session.user;
+        var post = new Post(currentUser.name,req.body.title,req.body.post);
+        post.save(function (err) {
+            if(err){
+                req.flash('error',err);
+                return res.redirect('/post');
+            }
+            req.flash('success','发表成功');
+            return res.redirect('/');
+        })
     })
     //退出页面
     app.get('/logout',checkLogin,function (req,res) {
