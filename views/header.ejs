@@ -11,12 +11,12 @@
 </header>
 <nav>
     <span><a href="/">首页</a></span>
-    <% if(!user){ %>
+    <% if(user){ %>
+    <span><a href="/post">发表</a></span>
+    <span><a href="/logout">退出</a></span>
+    <% }else{ %>
     <span><a href="/login">登录</a></span>
     <span><a href="/reg">注册</a></span>
-    <% }else{ %>
-    <span><a href="/post">发表</a></span>
-    <span><a href="/login">退出</a></span>
     <% } %>
 </nav>
 <article>

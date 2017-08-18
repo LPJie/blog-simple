@@ -33,7 +33,7 @@ User.prototype.save = function (callback) {
             collection.insert(user,{safe:true},function (err, user) {
                 //关闭数据库
                 mongo.close();
-                //如果错的话，韩慧错误结果
+                //如果错的话，返回错误结果
                 if(err){
                     return callback(err);
                 }
