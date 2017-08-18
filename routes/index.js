@@ -7,7 +7,7 @@ function checkNotLogin(req,res,next) {
     if(req.session.user){
         //用户已经登录
         req.flash('error','已登录,不能重复登录！');
-        res.redirect('back');//跳转到之前的页面
+        return res.redirect('back');//跳转到之前的页面
     }
     next();
 }
@@ -15,7 +15,7 @@ function checkLogin(req,res,next) {
     if(!req.session.user){
         //未登录
         req.flash('error','请先登录')
-        res.redirect('back');
+        return res.redirect('back');
     }
     next();
 }
