@@ -2,6 +2,8 @@
  * Created by Administrator on 2017/8/18.
  */
 var mongo = require('./db')
+//引入Markdown
+var markdown = require('markdown').markdown;
 //name：发表文章的用户名
 //title：文章标题
 //post：文章内容
@@ -62,6 +64,7 @@ Post.prototype.save = function (callback) {
         })
     })
 }
+//读取文章列表
 Post.get = function (name,callback) {
     mongo.open(function (err,db) {
         if(err){
@@ -82,6 +85,10 @@ Post.get = function (name,callback) {
                 if(err){
                     return callback(err);
                 }
+                //加入Markdown解析
+                docs.forEach(function (doc) {
+                    doc.post = markdown.toHTML(doc.post);
+                })
                 callback(null,docs)
             })
         })

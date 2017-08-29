@@ -4,6 +4,23 @@ var crypto = require('crypto');
 var User = require('../models/user');
 //Post对象的操作
 var Post = require('../models/post')
+//引入multer插件
+var multer = require('multer');
+//配置一下multer的参数
+var storage = multer.diskStorage({
+    //文件的存放地址
+    destination:function (req,file,cb) {
+        cb(null,'./public/images')
+    },
+    //文件的名字
+    filename:function (req,file,cb) {
+        cb(null,file.originalname)
+    }
+})
+//应用此设备
+var upload = multer({
+    storage:storage
+})
 //增加页面权限
 function checkNotLogin(req,res,next) {
     if(req.session.user){
@@ -156,5 +173,19 @@ module.exports = function (app) {
         req.session.user = null;
         req.flash('success','退出成功！');
         return res.redirect('/');
+    })
+    //文件上传的页面
+    app.get('/upload',checkLogin,function (req,res) {
+        res.render('upload',{
+            title: "文件长传",
+            user:req.session.user,
+            success:req.flash('success').toString(),
+            error:req.flash('error').toString()
+        })
+    })
+    //文件上传的行为
+    app.post('/upload',checkLogin,upload.array('field1',5), function (req,res) {
+        req.flash('success','文件上传成功！');
+        res.redirect('/upload');
     })
 }
