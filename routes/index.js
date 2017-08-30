@@ -1,5 +1,3 @@
-
-
 //加密
 var crypto = require('crypto');
 //User对象的操作
@@ -228,6 +226,47 @@ module.exports = function (app) {
                 error:req.flash('error').toString(),
                 post:post
             })
+        })
+    })
+    //编辑页面
+    app.get('/edit/:name/:minute/:title',checkLogin,function (req,res) {
+        var currentUser = req.session.user;//保存的是登陆的用户信息
+        Post.edit(currentUser.name,req.params.minute,req.params.title,function (err,post) {
+                if(err){
+                    req.flash('error',err);
+                    return res.redirect('back');
+                }
+                res.render('edit',{
+                    title:post.title,
+                    user:req.session.user,
+                    success:req.flash('success').toString(),
+                    error:req.flash('error').toString(),
+                    post:post
+                })
+            })
+    })
+    //编辑行为
+    app.post('/edit/:name/:minute/:title',checkLogin,function (req,res) {
+        Post.update(req.params.name,req.params.minute,req.params.title,req.body.post,function (err) {
+                var url = encodeURI('/u/'+req.params.name +'/'+req.params.minute+'/'+req.params.title);
+                if(err){
+                    req.flash('error',err);
+                    return res.redirect(url);
+                }
+                req.flash('success','编辑成功');
+                return res.redirect(url);
+            })
+    })
+    //删除行为
+    app.get('/remove/:name/:minute/:title',function (req,res) {
+        var currentUser = req.session.user;
+        Post.remove(currentUser.name,req.params.minute,req.params.title,function (err) {
+            if(err){
+                req.flash('error',err)
+                return res.redirect('back');
+            }
+            req.flash('success','删除成功!');
+            return res.redirect('/');
         })
     })
 }

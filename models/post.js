@@ -121,3 +121,84 @@ Post.getOne = function (name,minute,title,callback) {
         })
     })
 }
+//编辑文章的方法
+Post.edit = function (name,minute,title,callback) {
+    mongo.open(function (err,db) {
+        if(err){
+            return callback(err);
+        }
+        db.collection('posts',function (err,collection) {
+            if(err){
+                mongo.close();
+                return callback(err);
+            }
+            collection.findOne({
+                "name":name,
+                "time.minute":minute,
+                "title":title
+            },function (err,doc) {
+                mongo.close();
+                if(err){
+                    return callback(err);
+                }
+                callback(null,doc);//返回的事原始的格式，Markdown格式的，没有解析
+            })
+        })
+    })
+}
+//更新方法
+Post.update = function (name,minute,title,post,callback) {
+    mongo.open(function (err,db) {
+        if(err){
+            return callback(err);
+        }
+        db.collection('posts',function (err,collection) {
+            if(err){
+                mongo.close();
+                return callback(err);
+            }
+            collection.update({
+                "name":name,
+                "time.minute":minute,
+                "title":title
+            },{
+                $set:{post:post}
+            },function (err) {
+                mongo.close();
+                if(err){
+                    return callback(err);
+                }
+                callback(null);
+            })
+        })
+    })
+}
+//删除一篇文章
+Post.remove = function (name,minute,title,callback) {
+    //打开数据库
+    mongo.open(function (err,db) {
+        if(err){
+            return callback(err);
+        }
+        //读取posts集合
+        db.collection('posts',function (err,collection) {
+            if(err){
+                mongo.close();
+                return callback(err);
+            }
+            collection.remove({
+                "name":name,
+                "time.minute":minute,
+                "title":title
+            },{
+                w:1
+            },function (err) {
+                mongo.close();
+                if(err){
+                    return callback(err);
+                }
+                callback(null);
+            })
+        })
+    })
+}
