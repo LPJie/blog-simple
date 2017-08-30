@@ -1,26 +1,27 @@
+
+
 //加密
 var crypto = require('crypto');
 //User对象的操作
 var User = require('../models/user');
-//Post对象的操作
-var Post = require('../models/post')
+//Post对象操作类
+var Post = require('../models/post');
 //引入multer插件
 var multer = require('multer');
 //配置一下multer的参数
 var storage = multer.diskStorage({
-    //文件的存放地址
     destination:function (req,file,cb) {
         cb(null,'./public/images')
     },
-    //文件的名字
+    //文件的命名
     filename:function (req,file,cb) {
         cb(null,file.originalname)
     }
 })
-//应用此设备
+//应用此设置
 var upload = multer({
     storage:storage
-})
+});
 //增加页面权限
 function checkNotLogin(req,res,next) {
     if(req.session.user){
@@ -41,8 +42,8 @@ function checkLogin(req,res,next) {
 module.exports = function (app) {
     //首页的路由
     app.get('/',function (req,res) {
-        Post.get(null,function (err,posts) {
-            if(err){
+        Post.getAll(null,function (err,posts) {
+            if (err){
                 posts = [];
             }
             res.render('index',{
@@ -156,11 +157,11 @@ module.exports = function (app) {
     })
     //发布行为
     app.post('/post',checkLogin,function (req,res) {
-        //获取当前登录的用户
+        //当前登录的用户信息
         var currentUser = req.session.user;
         var post = new Post(currentUser.name,req.body.title,req.body.post);
         post.save(function (err) {
-            if(err){
+            if (err){
                 req.flash('error',err);
                 return res.redirect('/post');
             }
@@ -173,19 +174,60 @@ module.exports = function (app) {
         req.session.user = null;
         req.flash('success','退出成功！');
         return res.redirect('/');
-    })
+    });
     //文件上传的页面
     app.get('/upload',checkLogin,function (req,res) {
         res.render('upload',{
-            title: "文件长传",
+            title:'文件上传',
             user:req.session.user,
             success:req.flash('success').toString(),
             error:req.flash('error').toString()
         })
     })
     //文件上传的行为
-    app.post('/upload',checkLogin,upload.array('field1',5), function (req,res) {
-        req.flash('success','文件上传成功！');
+    app.post('/upload',checkLogin,upload.array('field1',5),function (req,res) {
+        req.flash('success','文件上传成功');
         res.redirect('/upload');
+    })
+    //用户发布的所有文章
+    app.get('/u/:name',function (req,res) {
+        //1,先获取到要查询的用户名姓名
+        var  name = req.params.name;
+        User.get(name,function (err,user) {
+            if (err){
+                req.flash('error','用户名不存在');
+                return res.redirect('/');
+            }
+            //3,查询该用户名得所有文章
+            Post.getAll(user.name,function (err,posts) {
+                if(err){
+                    req.flash('error',err);
+                    return res.redirect('/');
+                }
+                res.render('user',{
+                    title:user.name,
+                    user:req.session.user,
+                    success:req.flash('success').toString(),
+                    error:req.flash('error').toString(),
+                    posts:posts
+                })
+            })
+        })
+    })
+    //文章的详情页面
+    app.get('/u/:name/:minute/:title',function (req,res) {
+        Post.getOne(req.params.name,req.params.minute,req.params.title,function (err,post) {
+            if (err){
+                req.flash('error',err);
+                return res.redirect('/');
+            }
+            res.render('article',{
+                title:post.title,
+                user:req.session.user,
+                success:req.flash('success').toString(),
+                error:req.flash('error').toString(),
+                post:post
+            })
+        })
     })
 }

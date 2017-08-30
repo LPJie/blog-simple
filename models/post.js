@@ -65,7 +65,7 @@ Post.prototype.save = function (callback) {
     })
 }
 //读取文章列表
-Post.get = function (name,callback) {
+Post.getAll = function (name,callback) {
     mongo.open(function (err,db) {
         if(err){
             return callback(err);
@@ -90,6 +90,33 @@ Post.get = function (name,callback) {
                     doc.post = markdown.toHTML(doc.post);
                 })
                 callback(null,docs)
+            })
+        })
+    })
+}
+//查询一篇文章
+Post.getOne = function (name,minute,title,callback) {
+    //1.打开数据库
+    mongo.open(function (err,db) {
+        if(err){
+            return callback(err);
+        }
+        //2.读取posts集合
+        db.collection('posts',function (err,collection) {
+            if(err){
+                mongo.close();
+                return callback(err);
+            }
+            collection.findOne({
+                "name":name,
+                "time.minute":minute,
+                "title":title
+            },function (err,doc) {
+                mongo.close();
+                if (err){return callback(err)}
+                //将这个文章内容进行Markdown格式的解析
+                doc.post = markdown.toHTML(doc.post);
+                callback(null,doc);
             })
         })
     })
