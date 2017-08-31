@@ -42,13 +42,23 @@ function checkLogin(req,res,next) {
 module.exports = function (app) {
     //首页的路由
     app.get('/',function (req,res) {
-        Post.getAll(null,function (err,posts) {
+        //如果有参数传递（page当前页面），就使用参数作为当前页面，如果没有，就是第一页
+        var page = parseInt(req.query.page || 1);
+        Post.getTen(null,page,function (err,posts,total) {
             if (err){
                 posts = [];
             }
             res.render('index',{
                 title:'首页',
                 posts:posts,
+                //当前页数
+                page:page,
+                //总条数
+                total:total,
+                //判断是否为第一页
+                isFirstPage:(page - 1) == 0,
+                //判断是否为最后一页
+                isLastPage:((page - 1) * 10 + posts.length) == total,
                 user:req.session.user,//注册成功的用户信息
                 success:req.flash('success').toString(),//成功的提示信息
                 error:req.flash('error').toString()//失败的提示信息
@@ -193,13 +203,15 @@ module.exports = function (app) {
     app.get('/u/:name',function (req,res) {
         //1,先获取到要查询的用户名姓名
         var  name = req.params.name;
+        //获取当前传递的页数
+        var page = parseInt(req.query.page || 1);
         User.get(name,function (err,user) {
             if (err){
                 req.flash('error','用户名不存在');
                 return res.redirect('/');
             }
             //3,查询该用户名得所有文章
-            Post.getAll(user.name,function (err,posts) {
+            Post.getTen(user.name,page,function (err,posts,total) {
                 if(err){
                     req.flash('error',err);
                     return res.redirect('/');
@@ -207,6 +219,10 @@ module.exports = function (app) {
                 res.render('user',{
                     title:user.name,
                     user:req.session.user,
+                    page:page,
+                    total:total,
+                    isFirstPage:(page - 1) == 0,
+                    isLastPage:((page - 1) * 10 + posts.length == total),
                     success:req.flash('success').toString(),
                     error:req.flash('error').toString(),
                     posts:posts
@@ -289,6 +305,22 @@ module.exports = function (app) {
             }
             req.flash('success','留言成功！');
             return res.redirect('back');
+        })
+    })
+    //存档行为
+    app.get('/archive',function (req,res) {
+        Post.getArchive(function (err,posts) {
+            if(err){
+                req.flash('error',err);
+                return res.redirect('/');
+            }
+            res.render('archive',{
+                title:'存档页面',
+                posts:posts,
+                user:req.session.user,
+                success:req.flash('success').toString(),
+                error:req.flash('error').toString()
+            })
         })
     })
 }

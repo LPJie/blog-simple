@@ -67,7 +67,7 @@ Post.prototype.save = function (callback) {
     })
 }
 //读取文章列表
-Post.getAll = function (name,callback) {
+Post.getTen = function (name,page,callback) {
     mongo.open(function (err,db) {
         if(err){
             return callback(err);
@@ -82,17 +82,22 @@ Post.getAll = function (name,callback) {
                 query = {name:name}
             }
             //根据query对象查询文章
-            collection.find(query).sort({time:-1}).toArray(function (err, docs) {
-                mongo.close();
-                if(err){
-                    return callback(err);
-                }
-                //加入Markdown解析
-                docs.forEach(function (doc) {
-                    doc.post = markdown.toHTML(doc.post);
-                })
-                callback(null,docs)
-            })
+           collection.count(query,function (err,total) {
+               collection.find(query,{
+                   skip:(page - 1) * 10,
+                   limit:10
+               }).sort({time:-1}).toArray(function (err, docs) {
+                   mongo.close();
+                   if(err){
+                       return callback(err);
+                   }
+                   //加入Markdown解析
+                   docs.forEach(function (doc) {
+                       doc.post = markdown.toHTML(doc.post);
+                   })
+                   callback(null,docs,total)
+               })
+           })
         })
     })
 }
@@ -204,6 +209,33 @@ Post.remove = function (name,minute,title,callback) {
                     return callback(err);
                 }
                 callback(null);
+            })
+        })
+    })
+}
+//存档信息
+Post.getArchive = function (callback) {
+    mongo.open(function (err,db) {
+        if(err){
+            return callback(err);
+        }
+        db.collection('posts',function (err,collection) {
+            if(err){
+                mongo.close();
+                return callback(err);
+            }
+            collection.find({},{
+                "name":1,
+                "time":1,
+                "title":1
+            }).sort({
+                time:-1
+            }).toArray(function (err, docs) {
+                mongo.close();
+                if(err){
+                    return callback(err);
+                }
+                callback(null,docs);
             })
         })
     })

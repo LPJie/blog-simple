@@ -1,0 +1,20 @@
+<br>
+<div class="pageOne">
+    <% if(!isFirstPage){%>
+    <span class="prepage">
+        <a href="?page=<%= page-1 %>">上一页</a>
+    </span>
+    <%}%>
+    <% if(!isLastPage){%>
+    <span class="nextpage">
+        <a href="?page=<%= page+1 %>">下一页</a>
+    </span>
+    <%}%>
+    <span class="prepage">
+        <span><a href="?page=<%= page=1 %>">首页</a></span>
+        <%for(var a=0;a<Math.ceil(total/10);a++){%>
+        <span><a href="?page=<%= (a+1) %>"> <%= a+1 %></a></span>
+        <%}%>
+        <span><a href="?page=<%= page=a %>">末页</a></span>
+    </span>
+</div>
