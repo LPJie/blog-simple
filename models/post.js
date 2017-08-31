@@ -42,7 +42,9 @@ Post.prototype.save = function (callback) {
         name:this.name,
         time:time,
         title:this.title,
-        post:this.post
+        post:this.post,
+        //增加一个留言字段
+        comments:[]
     }
     //打开数据库
     mongo.open(function (err,db) {
@@ -116,6 +118,10 @@ Post.getOne = function (name,minute,title,callback) {
                 if (err){return callback(err)}
                 //将这个文章内容进行Markdown格式的解析
                 doc.post = markdown.toHTML(doc.post);
+                //让我们的留言也支持Markdown格式的解析
+                doc.comments.forEach(function (comment) {
+                    comment.content = markdown.toHTML(comment.content);
+                })
                 callback(null,doc);
             })
         })

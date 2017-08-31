@@ -4,6 +4,8 @@ var crypto = require('crypto');
 var User = require('../models/user');
 //Post对象操作类
 var Post = require('../models/post');
+//comment对象操作类
+var Comment = require('../models/comment');
 //引入multer插件
 var multer = require('multer');
 //配置一下multer的参数
@@ -267,6 +269,26 @@ module.exports = function (app) {
             }
             req.flash('success','删除成功!');
             return res.redirect('/');
+        })
+    })
+    //留言功能
+    app.post('/comment/:name/:minute/:title',function (req,res) {
+        var date = new Date();
+        time = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " +
+            date.getHours() + ":" + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+        var comment = {
+            name:req.body.name,
+            time:time,
+            content:req.body.content
+        }
+        var newComment = new Comment(req.params.name,req.params.minute,req.params.title,comment);
+        newComment.save(function (err) {
+            if(err){
+                req.flash('error',err);
+                return res.redirect('back');
+            }
+            req.flash('success','留言成功！');
+            return res.redirect('back');
         })
     })
 }

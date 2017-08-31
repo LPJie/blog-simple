@@ -1,0 +1,33 @@
+<br>
+<!--//留言的显示区-->
+<% post.comments.forEach(function(comment){ %>
+<p>
+    <%= comment.name %>
+    <span class="info">回复于<%= comment.time %></span>
+</p>
+<p><%- comment.content %></p>
+<%})%>
+<% if(user){ %>
+<form method="post" action="/comment/<%= post.name %>/<%= post.time.minute %>/<%= post.title %>">
+    发布人:<%= user.name %>
+    <input type="hidden" name="name" value="<%= user.name %>"><br>
+    <textarea name="content" cols="80" rows="20"></textarea><br>
+    <input type="submit" value="留言">
+</form>
+<% }else{ %>
+    请先 <a href="/login">登录</a>或者 <a href="/reg">注册</a>
+    <textarea name="content" cols="80" rows="20" id="text"></textarea><br>
+    <input type="submit" value="留言" id="sub">
+<%}%>
+<script>
+    window.onload = function () {
+        var text = document.querySelector('#text');
+        var sub = document.querySelector('#sub');
+        sub.onclick = function () {
+            location.href = '/login';
+        }
+        text.onfocus = function () {
+            location.href = '/login';
+        }
+    }
+</script>
