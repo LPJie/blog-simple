@@ -46,7 +46,8 @@ Post.prototype.save = function (callback) {
         tags:this.tags,
         post:this.post,
         //增加一个留言字段
-        comments:[]
+        comments:[],
+        pv:0
     }
     //打开数据库
     mongo.open(function (err,db) {
@@ -116,20 +117,38 @@ Post.getOne = function (name,minute,title,callback) {
                 mongo.close();
                 return callback(err);
             }
+            //根据用户名、发表日期及文章名进行查询
             collection.findOne({
                 "name":name,
                 "time.minute":minute,
                 "title":title
             },function (err,doc) {
-                mongo.close();
-                if (err){return callback(err)}
-                //将这个文章内容进行Markdown格式的解析
-                doc.post = markdown.toHTML(doc.post);
-                //让我们的留言也支持Markdown格式的解析
-                doc.comments.forEach(function (comment) {
-                    comment.content = markdown.toHTML(comment.content);
-                })
-                callback(null,doc);
+                if (err){
+                    mongo.close();
+                    return callback(err)
+                }
+                if(doc){
+                    //每访问1次，pv值增加1
+                    collection.update({
+                        "name":name,
+                        "time.minute":minute,
+                        "title":title
+                    },{
+                        $inc:{"pv":1}
+                    },function (err) {
+                        mongo.close();
+                        if(err){
+                            return callback(err);
+                        }
+                    });
+                    //将这个文章内容进行Markdown格式的解析
+                    doc.post = markdown.toHTML(doc.post);
+                    //让我们的留言也支持Markdown格式的解析
+                    doc.comments.forEach(function (comment) {
+                        comment.content = markdown.toHTML(comment.content);
+                    })
+                    callback(null,doc);
+                }
             })
         })
     })
@@ -274,6 +293,8 @@ Post.getTag = function (tag,callback) {
                 mongo.close();
                 return callback(err);
             }
+            //查询所有tags 数组内包含 tag 的文档
+            //并返回只含有 name 、time、title 组成的数组
             collection.find({
                 "tags":tag
             },{
@@ -288,6 +309,36 @@ Post.getTag = function (tag,callback) {
                     return callback(err);
                 }
                 callback(null,docs)
+            })
+        })
+    })
+}
+//通过搜索关键字查询文章信息
+Post.search = function (keyword,callback) {
+    mongo.open(function (err,db) {
+        if(err){
+            return callback(err);
+        }
+        db.collection('posts',function (err,collection) {
+            if(err){
+                mongo.close();
+                return callback(err);
+            }
+            var reg = new RegExp(keyword,'i');
+            collection.find({
+                "title":reg
+            },{
+                "name":1,
+                "time":1,
+                "title":1
+            }).sort({
+                time:-1
+            }).toArray(function (err, docs) {
+                mongo.close();
+                if(err){
+                    return callback(err);
+                }
+                callback(null,docs);
             })
         })
     })

@@ -356,4 +356,20 @@ module.exports = function (app) {
             })
         })
     })
+    //搜索的页面
+    app.get('/search',function (req,res) {
+        Post.search(req.query.keyword,function (err,posts) {
+            if(err){
+                req.flash('error',err)
+                return res.redirect('/')
+            }
+            res.render('search',{
+                title:req.query.search,
+                user:req.session.user,
+                success:req.flash('success').toString(),
+                error:req.flash('error').toString(),
+                posts:posts
+            })
+        })
+    })
 }

@@ -1,0 +1,13 @@
+<% include header %>
+<ul class="archive">
+    <% var lastDay = 0 %>
+    <% posts.forEach(function (post) { %>
+    <% if(lastDay != post.time.day) { %>
+    <li><h3><%= post.time.day %></h3></li>
+    <% lastDay = post.time.day %>
+    <% } %>
+    <li><time><%= post.time.day %></time></li>
+    <li><a href="/u/<%= post.name %>/<%= post.time.minute %>/<%= post.title %>"><%= post.title %></a></li>
+    <% }) %>
+</ul>
+<% include footer %>
