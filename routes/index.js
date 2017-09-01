@@ -169,7 +169,8 @@ module.exports = function (app) {
     app.post('/post',checkLogin,function (req,res) {
         //当前登录的用户信息
         var currentUser = req.session.user;
-        var post = new Post(currentUser.name,req.body.title,req.body.post);
+        var tags = [req.body.tag1,req.body.tag2,req.body.tag3];
+        var post = new Post(currentUser.name,req.body.title,tags,req.body.post);
         post.save(function (err) {
             if (err){
                 req.flash('error',err);
@@ -320,6 +321,38 @@ module.exports = function (app) {
                 user:req.session.user,
                 success:req.flash('success').toString(),
                 error:req.flash('error').toString()
+            })
+        })
+    })
+    //标签功能
+    app.get('/tags',function (req,res) {
+        Post.getTags(function (err,tags) {
+            if(err){
+                req.flash('error',err)
+                return res.redirect('/')
+            }
+            res.render('tags',{
+                title:'标签',
+                user:req.session.user,
+                tags:tags,
+                success:req.flash('success').toString(),
+                error:req.flash('error').toString()
+            })
+        })
+    })
+    //标签对应的文章列表
+    app.get('/tags/:tag',function (req,res) {
+        Post.getTag(req.params.tag,function (err,posts) {
+            if(err){
+                req.flash('error',err)
+                return res.redirect('/')
+            }
+            res.render('tag',{
+                title:'TAG:'+ req.params.tag,
+                user:req.session.user,
+                success:req.flash('success').toString(),
+                error:req.flash('error').toString(),
+                posts:posts
             })
         })
     })
